@@ -1,0 +1,47 @@
+# Local song library (use a git submodule at library/ for a public collection)
+library/*
+!library/.gitkeep
+!library/README.md
+
+# Even if library/ is force-added, never commit media cache (Pages is charts-only).
+library/**/*.wav
+library/**/*.mp3
+library/**/*.mp4
+library/**/*.webm
+library/**/*.mkv
+library/**/*.mov
+library/**/*.mid
+library/**/*.vtt
+library/**/mixes/
+library/**/stems/
+library/**/youtube/
+library/**/exports/
+library/**/_demucs_work/
+library/**/media.json
+library/**/drums_beats.json
+library/**/*.peaks.json
+
+# Static site output (`make build` / `make prod`)
+_site/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# OS / editor
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+tmp/
+
+# YouTube cookies for media-pipeline yt-dlp (never commit)
+services/media-pipeline/secrets/*
+!services/media-pipeline/secrets/.gitkeep
