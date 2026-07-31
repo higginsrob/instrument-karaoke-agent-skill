@@ -1,0 +1,3 @@
+# Optional — tests use the Python standard library (unittest).
+# Install only if you prefer pytest:
+#   pip install pytest

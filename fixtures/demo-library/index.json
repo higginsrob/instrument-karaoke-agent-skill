@@ -1,0 +1,49 @@
+{
+  "generated": true,
+  "song_count": 1,
+  "artists": [
+    {
+      "name": "Beck",
+      "slug": "beck",
+      "albums": [
+        {
+          "name": "singles",
+          "slug": "singles",
+          "songs": [
+            {
+              "title": "Country Down",
+              "slug": "country-down",
+              "path": "artists/beck/albums/singles/country-down.md"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "songs": [
+    {
+      "title": "Country Down",
+      "artist": "Beck",
+      "album": "singles",
+      "artist_slug": "beck",
+      "album_slug": "singles",
+      "song_slug": "country-down",
+      "path": "artists/beck/albums/singles/country-down.md",
+      "tuning": "E A D G B E",
+      "capo": 0,
+      "key": null,
+      "difficulty": "intermediate",
+      "chords": [
+        "G",
+        "C",
+        "C/B",
+        "Am",
+        "F",
+        "D"
+      ],
+      "source": "https://tabs.ultimate-guitar.com/tab/beck/country-down-chords-1466425",
+      "source_id": "1466425",
+      "imported_at": "2026-07-30"
+    }
+  ]
+}

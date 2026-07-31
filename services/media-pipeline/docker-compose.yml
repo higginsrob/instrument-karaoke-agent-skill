@@ -1,0 +1,73 @@
+services:
+  media-pipeline:
+    image: gatewaykeeper/instrument-karaoke-media:cpu
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8093}:8093"
+    environment:
+      PORT: "8093"
+      TORCH_HOME: /data/models
+      JOBS_DIR: /data/jobs
+      LIBRARY_DIR: /library
+      DEMUCS_DEVICE: ${DEMUCS_DEVICE:-cpu}
+      DEMUCS_MODEL: ${DEMUCS_MODEL:-htdemucs}
+      DEMUCS_OVERLAP: ${DEMUCS_OVERLAP:-0.1}
+      ALIGN_DEVICE: ${ALIGN_DEVICE:-cpu}
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-}
+      MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-600}
+      YOUTUBE_SAVE_VIDEO: ${YOUTUBE_SAVE_VIDEO:-1}
+      YOUTUBE_MAX_VIDEO_HEIGHT: ${YOUTUBE_MAX_VIDEO_HEIGHT:-1080}
+      YOUTUBE_COOKIES_FILE: ${YOUTUBE_COOKIES_FILE:-/secrets/youtube.cookies.txt}
+    volumes:
+      - ../../library:/library
+      - ./secrets:/secrets:ro
+      - media_jobs:/data/jobs
+      - media_models:/data/models
+
+  media-pipeline-gpu:
+    image: gatewaykeeper/instrument-karaoke-media:gpu
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    profiles: ["gpu"]
+    ports:
+      - "${PORT:-8093}:8093"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      PORT: "8093"
+      TORCH_HOME: /data/models
+      JOBS_DIR: /data/jobs
+      LIBRARY_DIR: /library
+      DEMUCS_DEVICE: ${DEMUCS_DEVICE:-cuda}
+      DEMUCS_MODEL: ${DEMUCS_MODEL:-htdemucs}
+      DEMUCS_OVERLAP: ${DEMUCS_OVERLAP:-0.1}
+      ADTOF_DEVICE: ${ADTOF_DEVICE:-cuda}
+      ALIGN_DEVICE: ${ALIGN_DEVICE:-cuda}
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-}
+      MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-600}
+      YOUTUBE_SAVE_VIDEO: ${YOUTUBE_SAVE_VIDEO:-1}
+      YOUTUBE_MAX_VIDEO_HEIGHT: ${YOUTUBE_MAX_VIDEO_HEIGHT:-1080}
+      YOUTUBE_COOKIES_FILE: ${YOUTUBE_COOKIES_FILE:-/secrets/youtube.cookies.txt}
+      PYTHONPATH: /app/server/shims
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../../library:/library
+      - ./secrets:/secrets:ro
+      - media_jobs:/data/jobs
+      - media_models:/data/models
+
+volumes:
+  media_jobs:
+  media_models:

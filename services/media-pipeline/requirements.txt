@@ -1,0 +1,20 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.0
+# [default] pulls yt-dlp-ejs (YouTube JS challenge solvers). Pair with Deno in the image.
+yt-dlp[default]>=2024.12.0
+httpx>=0.28.0
+soundfile>=0.12.1
+librosa>=0.10.2
+numpy>=1.26.0
+pretty_midi>=0.2.10
+Pillow>=10.0.0
+faster-whisper>=1.1.0
+
+# Install demucs / torch / ADTOF in the Dockerfile to pin CPU vs GPU stacks.
+# Always install demucs with --no-deps (avoids sphn / Rust Opus build on aarch64).
+# Local CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
+#            pip install --no-deps "demucs>=4.0.1,<5"
+#            pip install --no-deps dora-search einops julius lameenc openunmix tqdm \
+#              omegaconf retrying submitit cloudpickle treetable
+#            pip install --no-deps git+https://github.com/xavriley/ADTOF-pytorch.git
