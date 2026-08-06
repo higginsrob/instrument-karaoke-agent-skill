@@ -10,8 +10,13 @@ Local Ultimate-Guitar chord importer (Cursor skills) + a static HTML library vie
 
 Karaoke stem mixes with synced chord/lyric overlays (exported from the local media player):
 
-- [Nutshell — no vocal](https://youtu.be/KUxeqS6Q7gA)
-- [If You're Into It — no guitar](https://youtu.be/UX3dfahg8ak)
+[![Nutshell — no vocal](docs/demo-nutshell.jpg)](https://youtu.be/KUxeqS6Q7gA)
+
+[Nutshell — no vocal](https://youtu.be/KUxeqS6Q7gA)
+
+[![If You're Into It — no guitar](docs/demo-if-youre-into-it.jpg)](https://youtu.be/UX3dfahg8ak)
+
+[If You're Into It — no guitar](https://youtu.be/UX3dfahg8ak)
 
 ## Features
 
