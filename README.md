@@ -6,7 +6,11 @@ Local Ultimate-Guitar chord importer (Cursor skills) + a static HTML library vie
 
 ![Song view with lyrics, chord labels, and guitar fretboard diagrams](docs/song-view.png)
 
-### Demo videos
+### Demo
+
+[![Instrument Karaoke demo](docs/demo-app.jpg)](https://www.youtube.com/watch?v=UdcSU-doOkU)
+
+[Instrument Karaoke demo](https://www.youtube.com/watch?v=UdcSU-doOkU) (~12 min)
 
 Karaoke stem mixes with synced chord/lyric overlays (exported from the local media player):
 
