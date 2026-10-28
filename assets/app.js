@@ -9,6 +9,7 @@
   const VIEW_AS_USER_STORAGE_KEY = "instrument-karaoke.view-as-user";
   const SHOW_CHORDS_STORAGE_KEY = "instrument-karaoke.show-chords";
   const ACCENT_STORAGE_KEY = "instrument-karaoke.chord-accent";
+  const THEME_STORAGE_KEY = "instrument-karaoke.theme";
   const ACCENT_DEFAULT = "#1e1e1e";
   const ACCENT_COLORS = [
     { id: "black", label: "Black", value: "#1e1e1e" },
@@ -18,20 +19,6 @@
     { id: "blue", label: "Blue", value: "#3a7fd4" },
     { id: "purple", label: "Purple", value: "#8b5cc7" },
     { id: "rose", label: "Rose", value: "#d45a8a" },
-  ];
-  /** Non-root chord tones share one gray; root uses the selected accent. */
-  const CHORD_OTHER_TONE = "#5c5c5c";
-  const CHORD_TONE_CSS_VARS = [
-    "--chord-tone-root",
-    "--chord-tone-other",
-    "--chord-tone-third",
-    "--chord-tone-fifth",
-    "--chord-tone-fifth-alt",
-    "--chord-tone-sixth",
-    "--chord-tone-seventh",
-    "--chord-tone-ninth",
-    "--chord-tone-eleventh",
-    "--chord-tone-extension",
   ];
 
   let index = null;
@@ -163,16 +150,67 @@
     }
   }
 
+  function readThemePref() {
+    try {
+      const raw = localStorage.getItem(THEME_STORAGE_KEY);
+      return raw === "light" || raw === "dark" ? raw : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeThemePref(theme) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
+
+  function systemTheme() {
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function applyTheme(theme) {
+    const next = theme === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    const toggle = document.getElementById("theme-toggle");
+    const label = next === "dark" ? "Switch to light mode" : "Switch to dark mode";
+    if (toggle) {
+      toggle.setAttribute("aria-label", label);
+      toggle.title = label;
+    }
+    // Re-resolve theme-dependent chord colors and re-render open diagrams.
+    applyChordAccent(chordAccent);
+  }
+
+  function wireThemeToggle() {
+    document.getElementById("theme-toggle")?.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      writeThemePref(next);
+      applyTheme(next);
+    });
+    // Follow OS changes only while the visitor has not picked a theme.
+    window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+      if (readThemePref() === null) applyTheme(systemTheme());
+    });
+  }
+
+  /** Default "black" follows the theme's ink so the root tone stays visible in dark mode. */
+  function resolveAccentValue(value) {
+    if (value !== ACCENT_DEFAULT) return value;
+    const ink = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim();
+    return ink || value;
+  }
+
   function applyChordAccent(value) {
     const allowed = new Set(ACCENT_COLORS.map((c) => c.value));
     chordAccent = allowed.has(value) ? value : ACCENT_DEFAULT;
     const root = document.documentElement;
-    root.style.setProperty("--chord-accent", chordAccent);
-    root.style.setProperty("--chord-tone-root", chordAccent);
-    for (const cssVar of CHORD_TONE_CSS_VARS) {
-      if (cssVar === "--chord-tone-root") continue;
-      root.style.setProperty(cssVar, CHORD_OTHER_TONE);
-    }
+    const toneValue = resolveAccentValue(chordAccent);
+    root.style.setProperty("--chord-accent", toneValue);
+    root.style.setProperty("--chord-tone-root", toneValue);
     document.querySelectorAll(".accent-swatch").forEach((el) => {
       const active = el.dataset.accent === chordAccent;
       el.classList.toggle("is-active", active);
@@ -415,7 +453,8 @@
 
   async function boot() {
     try {
-      applyChordAccent(chordAccent);
+      applyTheme(document.documentElement.getAttribute("data-theme"));
+      wireThemeToggle();
       applyShowChords(showChords);
       wireSettingsNav();
       isAdmin = await detectAdmin();
@@ -486,7 +525,7 @@
     app.innerHTML = `
       <h1 class="hero-line">Library</h1>
       <p class="lede">No songs yet. Import with <code>/ug-import &lt;url&gt;</code>, or seed a demo:</p>
-      <pre class="chart" style="padding:1rem;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.7)">cp -R fixtures/demo-library/. library/
+      <pre class="chart" style="padding:1rem;border:1px solid var(--line);border-radius:12px;background:rgba(var(--surface-rgb),.7)">cp -R fixtures/demo-library/. library/
 python3 scripts/rebuild_index.py
 make server</pre>
     `;
@@ -536,6 +575,7 @@ make server</pre>
   function route() {
     unbindSongKeys();
     stopScroll();
+    setChartFullscreen(false);
     destroyTransientViews();
     const r = parseHash();
     if (r.view === "queue") return renderQueue();
@@ -965,6 +1005,12 @@ make server</pre>
             </div>
             <div class="song-chords" id="song-chords" hidden aria-label="Song chords"></div>
             <div class="chart-panel" id="chart-panel"${initialViewMode === "videoScroll" ? " hidden" : ""}>
+              <div class="toolbar chart-fullscreen-bar" id="chart-fullscreen-bar" hidden>
+                <label id="chart-text-size-wrap">Text
+                  <input id="chart-text-size" type="range" min="0.75" max="2" step="0.05" value="${CHART_TEXT_SIZE_DEFAULT}" />
+                </label>
+                <button type="button" class="secondary" id="chart-fullscreen-stop">Stop</button>
+              </div>
               <pre class="chart" id="chart">${renderChartHtml(chartBodyForView(body), chords)}</pre>
             </div>
             <div id="scroll-countdown" class="scroll-countdown" hidden aria-live="polite"></div>
@@ -1553,12 +1599,12 @@ make server</pre>
 
     function toggleScrollPlayback() {
       if (scrollState.playing || scrollState.countingDown) {
-        stopScroll();
-        if (toggle) toggle.textContent = "Play scroll";
+        endScrollPlayback();
         return;
       }
       const atTop = pageScrollTop() <= 1;
       const delay = clampStartDelay(scrollState.startDelay);
+      setChartFullscreen(true);
       if (atTop && delay > 0) {
         startScrollWithDelay(delay, toggle, countdownEl);
       } else {
@@ -1574,6 +1620,16 @@ make server</pre>
     });
 
     toggle?.addEventListener("click", () => toggleScrollPlayback());
+    document.getElementById("chart-fullscreen-stop")?.addEventListener("click", () => endScrollPlayback());
+    document.getElementById("chart-text-size")?.addEventListener("input", (e) => {
+      const size = Number(e.target.value);
+      applyChartTextSize(size);
+      try {
+        localStorage.setItem(CHART_TEXT_SIZE_KEY, String(size));
+      } catch (err) {
+        /* storage unavailable — size applies for this visit only */
+      }
+    });
 
     bindSongKeys((e) => {
       if (editing) return false;
@@ -1585,6 +1641,10 @@ make server</pre>
           return true;
         }
         return false;
+      }
+      if (e.key === "Escape" && document.documentElement.classList.contains("chart-fullscreen")) {
+        endScrollPlayback();
+        return true;
       }
       if (e.code === "Space" || e.key === " ") {
         e.preventDefault();
@@ -1795,8 +1855,58 @@ make server</pre>
   }
 
   function getPageScroller() {
+    if (document.documentElement.classList.contains("chart-fullscreen")) {
+      return document.getElementById("chart-panel");
+    }
     return document.scrollingElement || document.documentElement;
   }
+
+  /** Phones: Play scroll shows the chart panel fullscreen, so it becomes the scroll container. */
+  const phoneChartMedia = window.matchMedia("(max-width: 640px)");
+
+  const CHART_TEXT_SIZE_KEY = "instrument-karaoke.chart-text-size";
+  const CHART_TEXT_SIZE_DEFAULT = 1.05;
+
+  function savedChartTextSize() {
+    try {
+      const saved = Number(localStorage.getItem(CHART_TEXT_SIZE_KEY));
+      if (saved >= 0.75 && saved <= 2) return saved;
+    } catch (e) {
+      /* storage unavailable — use the default */
+    }
+    return CHART_TEXT_SIZE_DEFAULT;
+  }
+
+  function applyChartTextSize(rem) {
+    document.getElementById("chart-panel")?.style.setProperty("--chart-font-size", `${rem}rem`);
+    const input = document.getElementById("chart-text-size");
+    if (input) input.value = String(rem);
+  }
+
+  function setChartFullscreen(on) {
+    const panel = document.getElementById("chart-panel");
+    if (!panel) return;
+    const active = Boolean(on) && phoneChartMedia.matches && !panel.hidden;
+    document.documentElement.classList.toggle("chart-fullscreen", active);
+    panel.classList.toggle("is-fullscreen", active);
+    const bar = document.getElementById("chart-fullscreen-bar");
+    const toggle = document.getElementById("scroll-toggle");
+    const speedWrap = document.getElementById("scroll-speed-wrap");
+    if (bar) bar.hidden = !active;
+    // The speed control moves into the fullscreen bar and back to the toolbar on exit.
+    if (bar && toggle && speedWrap) {
+      if (active) bar.prepend(speedWrap);
+      else toggle.after(speedWrap);
+    }
+    if (active) {
+      applyChartTextSize(savedChartTextSize());
+      panel.scrollTop = 0;
+    }
+  }
+
+  phoneChartMedia.addEventListener("change", (e) => {
+    if (!e.matches) setChartFullscreen(false);
+  });
 
   function pageScrollTop() {
     return getPageScroller().scrollTop || window.scrollY || 0;
@@ -1867,6 +1977,7 @@ make server</pre>
     }
 
     scrollState.countingDown = true;
+    requestWakeLock();
     if (toggle) toggle.textContent = "Cancel";
     let remaining = total;
     setCountdownDisplay(countdownEl, remaining);
@@ -1908,15 +2019,23 @@ make server</pre>
         scroller.scrollTop += pixels;
         scrollState.carry -= pixels;
       }
-      if (scroller.scrollTop + window.innerHeight >= scroller.scrollHeight - 1) {
-        stopScroll();
-        const toggle = document.getElementById("scroll-toggle");
-        if (toggle) toggle.textContent = "Play scroll";
+      const viewHeight = scroller.id === "chart-panel" ? scroller.clientHeight : window.innerHeight;
+      if (scroller.scrollTop + viewHeight >= scroller.scrollHeight - 1) {
+        endScrollPlayback();
         return;
       }
       scrollState.raf = requestAnimationFrame(tick);
     }
     scrollState.raf = requestAnimationFrame(tick);
+    requestWakeLock();
+  }
+
+  /** Stops play scroll and leaves the fullscreen chart panel, if shown. */
+  function endScrollPlayback() {
+    stopScroll();
+    setChartFullscreen(false);
+    const toggle = document.getElementById("scroll-toggle");
+    if (toggle) toggle.textContent = "Play scroll";
   }
 
   function stopScroll() {
@@ -1930,7 +2049,45 @@ make server</pre>
     if (scrollState.raf) cancelAnimationFrame(scrollState.raf);
     scrollState.raf = null;
     setCountdownDisplay(document.getElementById("scroll-countdown"), null);
+    releaseWakeLock();
   }
+
+  /** Keeps the screen awake while play scroll runs (Screen Wake Lock API; needs HTTPS or localhost). */
+  let wakeLock = null;
+  let wakeLockPending = false;
+  let wakeLockWanted = false;
+
+  async function requestWakeLock() {
+    wakeLockWanted = true;
+    if (!("wakeLock" in navigator) || wakeLock || wakeLockPending) return;
+    wakeLockPending = true;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!wakeLockWanted) {
+        sentinel.release();
+        return;
+      }
+      wakeLock = sentinel;
+      sentinel.addEventListener("release", () => {
+        if (wakeLock === sentinel) wakeLock = null;
+      });
+    } catch {
+      /* denied, unsupported, or low battery — scrolling still works */
+    } finally {
+      wakeLockPending = false;
+    }
+  }
+
+  function releaseWakeLock() {
+    wakeLockWanted = false;
+    if (wakeLock) wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+
+  // The browser drops the lock when the page is hidden; take it again on return.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && wakeLockWanted) requestWakeLock();
+  });
 
   function escapeHtml(s) {
     return String(s)

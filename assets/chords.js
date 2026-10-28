@@ -175,28 +175,46 @@
   const WHITE_PCS = [0, 2, 4, 5, 7, 9, 11];
   const IS_BLACK_PC = { 1: true, 3: true, 6: true, 8: true, 10: true };
 
-  /** CSS custom properties for chord-tone fills (root from accent color). */
+  /** Diagram colors: chord-tone fills plus ink, key, and label colors (light-theme defaults). */
   const TONE_COLOR_FALLBACKS = {
     root: "#1e1e1e",
     other: "#5c5c5c",
+    ink: "#1e1e1e",
+    inkSoft: "#626262",
+    bar: "#5c5c5c",
+    keyWhite: "#f7f7f7",
+    keyBlack: "#1e1e1e",
+    onTone: "#f3f3f3",
+  };
+  /** Theme-aware CSS custom properties behind the diagram colors above. */
+  const DIAGRAM_CSS_VARS = {
+    ink: "--diagram-ink",
+    inkSoft: "--diagram-ink-soft",
+    bar: "--diagram-bar",
+    keyWhite: "--diagram-key-white",
+    keyBlack: "--diagram-key-black",
+    onTone: "--diagram-on-tone",
   };
 
   /** Resolve palette colors to concrete hex (SVG presentation attrs don't always handle var()). */
   function resolveToneColors() {
-    let root = TONE_COLOR_FALLBACKS.root;
-    let other = TONE_COLOR_FALLBACKS.other;
+    const colors = { ...TONE_COLOR_FALLBACKS };
     try {
       if (typeof getComputedStyle === "function" && document?.documentElement) {
         const cs = getComputedStyle(document.documentElement);
         const r = cs.getPropertyValue("--chord-tone-root").trim();
         const o = cs.getPropertyValue("--chord-tone-other").trim() || cs.getPropertyValue("--chord-tone-third").trim();
-        if (r) root = r;
-        if (o) other = o;
+        if (r) colors.root = r;
+        if (o) colors.other = o;
+        for (const [key, cssVar] of Object.entries(DIAGRAM_CSS_VARS)) {
+          const value = cs.getPropertyValue(cssVar).trim();
+          if (value) colors[key] = value;
+        }
       }
     } catch {
       /* ignore */
     }
-    return { root, other };
+    return colors;
   }
 
   /** Root pitch class of the written chord name (ignores slash bass). */
@@ -742,32 +760,32 @@
     };
 
     let svg = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(chordName)} chord">`;
-    svg += `<text x="${w / 2}" y="16" text-anchor="middle" font-size="14" font-family="DM Sans,sans-serif" fill="#1e1e1e" font-weight="600">${escapeHtml(chordName)}</text>`;
+    svg += `<text x="${w / 2}" y="16" text-anchor="middle" font-size="14" font-family="DM Sans,sans-serif" fill="${colors.ink}" font-weight="600">${escapeHtml(chordName)}</text>`;
 
     if (base > 1) {
-      svg += `<text x="8" y="${top + fretGap * 0.7}" font-size="11" font-family="IBM Plex Mono,monospace" fill="#626262">${base}</text>`;
+      svg += `<text x="8" y="${top + fretGap * 0.7}" font-size="11" font-family="IBM Plex Mono,monospace" fill="${colors.inkSoft}">${base}</text>`;
     }
 
     if (base === 1) {
-      svg += `<rect x="${left - 1}" y="${top - 3}" width="${right - left + 2}" height="5" fill="#1e1e1e" rx="1"/>`;
+      svg += `<rect x="${left - 1}" y="${top - 3}" width="${right - left + 2}" height="5" fill="${colors.ink}" rx="1"/>`;
     } else {
-      svg += `<line x1="${left}" y1="${top}" x2="${right}" y2="${top}" stroke="#1e1e1e" stroke-width="1.5"/>`;
+      svg += `<line x1="${left}" y1="${top}" x2="${right}" y2="${top}" stroke="${colors.ink}" stroke-width="1.5"/>`;
     }
 
     for (let f = 1; f <= FRET_COUNT; f++) {
       const y = top + f * fretGap;
-      svg += `<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="#1e1e1e" stroke-width="1.2" opacity="0.55"/>`;
+      svg += `<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="${colors.ink}" stroke-width="1.2" opacity="0.55"/>`;
     }
     for (let s = 0; s < stringCount; s++) {
       const x = left + s * stringGap;
-      svg += `<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="#1e1e1e" stroke-width="1.3"/>`;
+      svg += `<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="${colors.ink}" stroke-width="1.3"/>`;
     }
 
     if (barre != null) {
       const barreFret = Number(barre);
       const y = top + (barreFret - base + 0.5) * fretGap;
       if (y >= top && y <= bottom) {
-        svg += `<rect x="${left - 4}" y="${y - 6}" width="${right - left + 8}" height="12" rx="6" fill="#5c5c5c" opacity="0.9"/>`;
+        svg += `<rect x="${left - 4}" y="${y - 6}" width="${right - left + 8}" height="12" rx="6" fill="${colors.bar}" opacity="0.9"/>`;
       }
     }
 
@@ -775,7 +793,7 @@
       const x = left + s * stringGap;
       const fret = frets[s];
       if (fret === -1 || fret === "x" || fret === "X") {
-        svg += `<text x="${x}" y="${top - 10}" text-anchor="middle" font-size="12" fill="#626262">×</text>`;
+        svg += `<text x="${x}" y="${top - 10}" text-anchor="middle" font-size="12" fill="${colors.inkSoft}">×</text>`;
         continue;
       }
       const n = Number(fret);
@@ -791,7 +809,7 @@
       svg += `<circle cx="${x}" cy="${y}" r="7.5" fill="${fill}"/>`;
       const finger = fingers[s];
       if (finger && Number(finger) > 0) {
-        svg += `<text x="${x}" y="${y + 3.5}" text-anchor="middle" font-size="10" fill="#efefef" font-family="DM Sans,sans-serif">${finger}</text>`;
+        svg += `<text x="${x}" y="${y + 3.5}" text-anchor="middle" font-size="10" fill="${colors.onTone}" font-family="DM Sans,sans-serif">${finger}</text>`;
       }
     }
 
@@ -852,17 +870,17 @@
     const left = (w - whiteKeys.length * whiteW) / 2;
 
     let svg = `<svg class="piano-diagram" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(chordName)} piano chord">`;
-    svg += `<text x="${w / 2}" y="18" text-anchor="middle" font-size="15" font-family="DM Sans,sans-serif" fill="#1e1e1e" font-weight="600">${escapeHtml(chordName)}</text>`;
+    svg += `<text x="${w / 2}" y="18" text-anchor="middle" font-size="15" font-family="DM Sans,sans-serif" fill="${colors.ink}" font-weight="600">${escapeHtml(chordName)}</text>`;
 
     whiteKeys.forEach((n, i) => {
       const x = left + i * whiteW;
       const pc = ((n % 12) + 12) % 12;
       const on = active.has(n);
-      let fill = "#f7f7f7";
+      let fill = colors.keyWhite;
       if (on) fill = toneFillForPc(pc, rootPc, colors);
-      svg += `<rect x="${x}" y="${keyboardTop}" width="${whiteW - 1.5}" height="${whiteH}" rx="2" fill="${fill}" stroke="#1e1e1e" stroke-width="1.2"/>`;
+      svg += `<rect x="${x}" y="${keyboardTop}" width="${whiteW - 1.5}" height="${whiteH}" rx="2" fill="${fill}" stroke="${colors.ink}" stroke-width="1.2"/>`;
       if (on) {
-        svg += `<text x="${x + (whiteW - 1.5) / 2}" y="${keyboardTop + whiteH - 12}" text-anchor="middle" font-size="11" font-family="DM Sans,sans-serif" fill="#f3f3f3">${PC_NAME[pc]}</text>`;
+        svg += `<text x="${x + (whiteW - 1.5) / 2}" y="${keyboardTop + whiteH - 12}" text-anchor="middle" font-size="11" font-family="DM Sans,sans-serif" fill="${colors.onTone}">${PC_NAME[pc]}</text>`;
       }
     });
 
@@ -873,11 +891,11 @@
       if (!IS_BLACK_PC[pc]) return;
       const x = left + i * whiteW + whiteW - blackW / 2;
       const on = active.has(next);
-      let fill = "#1e1e1e";
+      let fill = colors.keyBlack;
       if (on) fill = toneFillForPc(pc, rootPc, colors);
-      svg += `<rect x="${x}" y="${keyboardTop}" width="${blackW}" height="${blackH}" rx="1.5" fill="${fill}" stroke="#111" stroke-width="0.7"/>`;
+      svg += `<rect x="${x}" y="${keyboardTop}" width="${blackW}" height="${blackH}" rx="1.5" fill="${fill}" stroke="${colors.keyBlack}" stroke-width="0.7"/>`;
       if (on) {
-        svg += `<text x="${x + blackW / 2}" y="${keyboardTop + blackH - 10}" text-anchor="middle" font-size="9" font-family="DM Sans,sans-serif" fill="#f3f3f3">${PC_NAME[pc]}</text>`;
+        svg += `<text x="${x + blackW / 2}" y="${keyboardTop + blackH - 10}" text-anchor="middle" font-size="9" font-family="DM Sans,sans-serif" fill="${colors.onTone}">${PC_NAME[pc]}</text>`;
       }
     });
 
@@ -885,7 +903,7 @@
       voicing.inversion === 0
         ? "root position"
         : `${voicing.inversion === 1 ? "1st" : voicing.inversion === 2 ? "2nd" : voicing.inversion === 3 ? "3rd" : voicing.inversion + "th"} inversion`;
-    svg += `<text x="${w / 2}" y="${h - 8}" text-anchor="middle" font-size="11" font-family="DM Sans,sans-serif" fill="#626262">${invLabel}</text>`;
+    svg += `<text x="${w / 2}" y="${h - 8}" text-anchor="middle" font-size="11" font-family="DM Sans,sans-serif" fill="${colors.inkSoft}">${invLabel}</text>`;
     svg += "</svg>";
     return svg;
   }
