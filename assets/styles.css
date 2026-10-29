@@ -1002,7 +1002,10 @@ html.chords-hidden .song-chords {
     border-radius: 0;
     box-shadow: none;
   }
+}
 
+/* Phones, portrait or landscape: play scroll gives the chart the whole screen. */
+@media (max-width: 640px), (orientation: landscape) and (max-height: 500px) {
   .chart-panel.is-fullscreen {
     position: fixed;
     inset: 0;
@@ -1033,10 +1036,10 @@ html.chords-hidden .song-chords {
     box-shadow: 0 0 50px black;
   }
 
-  /* Space between the pinned toolbar and the first line, so play scroll starts clear of it. */
+  /* Half a screen above and below the chart, so play scroll starts and ends with the lines at mid-screen. */
   .chart-panel.is-fullscreen .chart {
     font-size: var(--chart-font-size, 1.05rem);
-    padding-top: 3em;
+    padding-block: 50vh;
   }
 }
 

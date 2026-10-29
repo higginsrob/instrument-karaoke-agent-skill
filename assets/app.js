@@ -298,7 +298,7 @@
 
   function clampSpeed(n) {
     if (!Number.isFinite(n)) return 1;
-    return Math.min(4, Math.max(0.5, n));
+    return Math.min(4, Math.max(0.25, n));
   }
 
   function clampStartDelay(n) {
@@ -965,7 +965,7 @@ make server</pre>
             <div class="toolbar" id="song-toolbar"${initialViewMode === "videoScroll" ? " hidden" : ""}>
               <button type="button" id="scroll-toggle">Play scroll</button>
               <label id="scroll-speed-wrap">Speed
-                <input id="scroll-speed" type="range" min="0.5" max="4" step="0.25" value="${speed}" />
+                <input id="scroll-speed" type="range" min="0.25" max="2" step="0.25" value="${speed}" />
                 <span id="speed-label">${speed.toFixed(2)}×</span>
               </label>
               ${
@@ -1007,7 +1007,7 @@ make server</pre>
             <div class="chart-panel" id="chart-panel"${initialViewMode === "videoScroll" ? " hidden" : ""}>
               <div class="toolbar chart-fullscreen-bar" id="chart-fullscreen-bar" hidden>
                 <label id="chart-text-size-wrap">Text
-                  <input id="chart-text-size" type="range" min="0.75" max="2" step="0.05" value="${CHART_TEXT_SIZE_DEFAULT}" />
+                  <input id="chart-text-size" type="range" min="0.4" max="1.1" step="0.05" value="${CHART_TEXT_SIZE_DEFAULT}" />
                 </label>
                 <button type="button" class="secondary" id="chart-fullscreen-stop">Stop</button>
               </div>
@@ -1861,8 +1861,8 @@ make server</pre>
     return document.scrollingElement || document.documentElement;
   }
 
-  /** Phones: Play scroll shows the chart panel fullscreen, so it becomes the scroll container. */
-  const phoneChartMedia = window.matchMedia("(max-width: 640px)");
+  /** Phones (portrait or landscape): Play scroll shows the chart panel fullscreen, so it becomes the scroll container. */
+  const phoneChartMedia = window.matchMedia("(max-width: 640px), (orientation: landscape) and (max-height: 500px)");
 
   const CHART_TEXT_SIZE_KEY = "instrument-karaoke.chart-text-size";
   const CHART_TEXT_SIZE_DEFAULT = 1.05;
@@ -1870,7 +1870,7 @@ make server</pre>
   function savedChartTextSize() {
     try {
       const saved = Number(localStorage.getItem(CHART_TEXT_SIZE_KEY));
-      if (saved >= 0.75 && saved <= 2) return saved;
+      if (saved >= 0.4 && saved <= 1.1) return saved;
     } catch (e) {
       /* storage unavailable — use the default */
     }
