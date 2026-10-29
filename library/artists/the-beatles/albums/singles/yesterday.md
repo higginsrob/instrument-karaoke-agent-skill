@@ -1,0 +1,82 @@
+---
+title: Yesterday
+artist: The Beatles
+album: singles
+tuning: E A D G B E
+capo: 0
+key: F
+difficulty: intermediate
+source: "https://tabs.ultimate-guitar.com/tab/the-beatles/yesterday-chords-17450"
+source_id: "17450"
+imported_at: 2026-07-30
+scroll_speed: 1.0
+start_delay: 0.0
+chords: [F, Em7, A7, Dm, Dm/C, Bb, C7, F/E, G7, Gm, C, G/F]
+---
+
+```
+Chords in the original key of F. McCartney plays it in G but uses
+a guitar that is tuned down one full step (D-G-C-F-A-d), that's
+why the song sounds in the key of F. Transposed +2 to G (the way
+McCartney played it in the studio and plays it live until today)
+the song is much easier to play.
+
+[Intro]
+
+F  F
+
+[Verse 1]
+
+F         Em7     A7                 Dm     Dm/C
+Yesterday, all my troubles seemed so far away
+
+Bb       C7                     F            F/E Dm  G7       Bb F F
+ Now it looks as though they're here to stay, oh I believe in yesterday
+
+[Verse 2]
+
+F        Em7      A7             Dm         Dm/C
+Suddenly, I'm not half the man I used to be
+
+Bb         C7             F        F/E Dm   G7       Bb F F
+ There's a shadow hanging over me, oh yesterday came suddenly
+
+[Chorus]
+
+Em7 A7   Dm  Dm/C Bb         Gm        C        F
+Why she  had to   go I don't know, she wouldn't say
+
+Em7 A7   Dm  Dm/C  Bb           Gm       C     F
+I   said something wrong, now I long for yesterday
+
+[Verse 3]
+
+F         Em7       A7           Dm          Dm/C
+Yesterday, love was such an easy game to play
+
+Bb     C7              F          F/E Dm  G7       Bb F F
+ Now I need a place to hide away, oh  I believe in yesterday
+
+[Chorus]
+
+Em7 A7   Dm  Dm/C Bb           Gm       C       F
+ Why she  had to   go I don't know, she wouldn't say
+
+Em7 A7   Dm  Dm/C  Bb           Gm       C     F
+I   said something wrong, now I long for yesterday
+
+[Verse]
+
+F        Em7        A7           Dm           Dm/C
+Yesterday, love was such an easy game to play
+
+Bb     C7              F          F/E Dm  G7       Bb F F
+ Now I need a place to hide away, oh  I believe in yesterday
+
+[Outro]
+
+F     G/F   Bb F  F
+Mm mm mm mm mm mm mmmmmmmmm
+xx321x
+     xx300x
+```
